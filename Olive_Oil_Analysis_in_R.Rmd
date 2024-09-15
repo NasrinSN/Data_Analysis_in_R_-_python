@@ -1,0 +1,169 @@
+---
+title: "Olive Oil Analysis"
+author: "Nasrin Sultana Nipa"
+date: "2024-02-05"
+output:
+  pdf_document: default
+  word_document: default
+  html_document: default
+---
+#### To install the tidyverse package, I have an error related to CRAN mirror, to solve that issue I set a CRAN mirror before installing the package.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(repos = c(CRAN = "https://cran.rstudio.com"))
+```
+
+## Project Overview: 
+Data loading, combining, correlation plotting and statistical analysis (mean, median and fdifference of mean and median for each column.
+
+## Dataset Courtesy:
+"Massart, D. L., Vandeginste, B. G. M., Buydens, L. M. C., de Jong, S., Lewi, P. J., Smeyers-Verbeke, J. (1998) Handbook of Chemometrics and Qualimetrics: Part B. Elsevier. Tables 35.1 and 35.4."
+
+# Installation:
+
+## To use the 'tidyverse' library, installing the package in RStudio using the command 'install.packages()'.
+
+```{r tidyverse installation}
+install.packages("tidyverse")
+```
+
+## After installation, to include the library in script, we need to use library() function.
+
+```{r loading tidyverse}
+library(tidyverse)
+```
+## Loading Datasets:
+## We have two data files to proceed:
+
+### i) olive_oil_sensory.csv //contains the sensory panel variables
+
+### ii) olive_oil_chemical.csv //contains the chemical panel variables
+
+## This dataset contains scores on 6 attributes from a sensory panel and measurements of 5 physico-chemical quality parameters on 16 olive oil samples. The first five oils are Greek, the next five are Italian and the last six are Spanish.
+
+## To load each of the CSV files into tables with the read_csv() function from tidyverse can be used.
+
+```{r}
+# Load the first CSV file (olive_oil_sensory.csv)
+sensory_data <- read_csv("C:\\Users\\nasrin\\Desktop\\spring 2024\\DS\\hw3\\olive_oil_sensory.csv")
+```
+```{r}
+# Load the second CSV file (olive_oil_chemical.csv)
+chemical_data <- read_csv("C:\\Users\\nasrin\\Desktop\\spring 2024\\DS\\hw3\\datasetchemical\\olive_oil_chemical.csv")
+```
+## Using spec() to retrieve the full column specification for datasets.
+
+```{r}
+spec(sensory_data)
+spec(chemical_data)
+```
+## Two see the whole dataframe of two datasets, we can do the following:
+
+```{r}
+print(sensory_data)
+```
+```{r}
+print(chemical_data)
+```
+
+## Combining Tables: To combine the two tables into a single table using left join with all 11 columns and 16 rows.
+
+## As, 'region' is the common column in two tables, so we can do the left join on that column and can create the new tables named "oil". After that we can omit that column. If we try to omit the 'region' column before or during left join operation, then an error will occur because the left join is done by using 'region' column.
+
+```{r}
+# Combine the two tables using left_join
+oil <- left_join(sensory_data, chemical_data, by = "region")
+
+# Omit the 'region' column from the combined table
+oil <- select(oil, -region)
+
+# Show the combined table without the 'region' column
+print(oil)
+```
+
+## Creating Correlation Plot: This is the process of how we can create a correlation plot for all numeric variables in the combined tibble "oil" while excluding the categorical variable "region".
+
+## This code installs and loads the corrplot package first, extracts the numeric variables excluding 'region', computes the correlation matrix using the cor() function, and then creates a correlation plot using corrplot with red and blue colors for correlation strength.
+
+```{r}
+# Install the corrplot package if not already installed
+install.packages("corrplot")
+
+# Load the corrplot package
+library(corrplot)
+
+# Extract numeric variables excluding 'region'
+oil_vars <- colnames(oil)[-1]
+numeric_data <- oil[oil_vars]
+
+# Compute the correlation matrix
+cor_matrix <- cor(numeric_data)
+
+# Create a correlation plot using corrplot
+corrplot(cor_matrix, method = "color", col = c("red", "white", "blue"), addCoef.col = "black", tl.col = "black", title = "Correlation Plot")
+```
+## Reproducing Metrics:
+
+## This code uses the summary() function to display summary statistics for each variable in the tibble "oil." Additionally, it creates a box plot for the numeric variables using boxplot(), with different colors for better visualization.
+
+```{r}
+# Summary statistics
+summary(oil)
+
+# Box plot for numeric variables
+boxplot(oil[, oil_vars], col = c("red", "green", "blue"), main = "Box Plot of Numeric Variables", names = oil_vars)
+```
+## Pair Plotting: We can create a pair plot for the numeric variables in the combined tibble "oil" using the pairs() function.
+
+## This code uses the pairs() function to create a scatterplot matrix (pair plot) for the numeric variables in the tibble "oil".
+
+```{r}
+# Create a pair plot
+pairs(oil[oil_vars], main = "Pair Plot of Numeric Variables", col = c("red", "green", "blue"))
+```
+
+## Histogram:
+## Creating a histogram for the 'c_Acidity' column in the combined tibble "oil".
+
+```{r}
+# Create a histogram for the 'c_Acidity' column
+hist(oil$c_Acidity, col = "skyblue", main = "Histogram of c_Acidity", xlab = "c_Acidity")
+```
+## The following code uses the hist() function to produce a histogram of the values in the 'c_Acidity' column, with a sky-blue color for better visualization.
+
+## This code uses as.numeric() to cast the 'c_Acidity' column to numeric before creating the histogram.
+
+```{r}
+# Create a histogram for the 'c_Acidity' column after converting to numeric
+hist(as.numeric(oil$c_Acidity), col = "skyblue", main = "Histogram of c_Acidity", xlab = "c_Acidity")
+```
+## Compute the following:
+
+### Compute the mean value of each numeric column. (this will produce a vector of 11 values).
+
+### Compute the median values of each column.
+
+### Compute the difference between the mean and median for each column.
+
+```{r}
+# Compute the mean value of each numeric column
+mean_values <- colMeans(oil)
+
+# Compute the median values of each column
+median_values <- apply(oil, 2, median)
+
+# Compute the difference between the mean and median for each column
+diff_mean_median <- mean_values - median_values
+
+# Combine the results into a data frame
+result_df <- data.frame(
+  Variable = names(mean_values),
+  Mean = mean_values,
+  Median = median_values,
+  Difference_Mean_Median = diff_mean_median
+)
+
+# Print the result
+print(result_df)
+```
